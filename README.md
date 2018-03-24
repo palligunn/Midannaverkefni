@@ -1,0 +1,2 @@
+# Midannaverkefni
+Miðannaverkefni fyrir JavaScript
