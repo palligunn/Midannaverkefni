@@ -52,18 +52,15 @@ function create() {//byggir leikinn með að setja inn allar myndir sem þú kal
 
 	stars = game.add.group();
 	stars.enableBody = true; 
-	
-	for (var i=0; i<10; i++) {
 
-		var star = stars.create(Math.random()*game.world.height, -18, 'star');
+	for (var i=0; i<100; i++) {
+
+		var star = stars.create(Math.random()*790, -18, 'star');
 
 		star.body.gravity.y = 300;
 	}	
 
 	scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'})
-
-
-
 }
 
 function update() {
@@ -101,16 +98,15 @@ function update() {
 }
 
 function collectStar (player, star) {
-	// var randomx = (...)
-	// var randomy = (...)
-
-	// var star = game.add.sprite(10, -18, "stars")
-
 	star.kill();
-		
-
+	spawnStars();
 
 	score += 10;
 	scoreText.text = 'Score: ' + score;
+}
 
+function spawnStars () {
+	var star = stars.create(Math.random()*790, -18, 'star');
+
+	star.body.gravity.y = 300;
 }
