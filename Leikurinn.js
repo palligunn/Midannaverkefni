@@ -12,11 +12,12 @@ var scoreText;
 
 var randomx;
 var randomy;
+var stateText;
 
+var badCount = 0;
 var count = 0;
 
 function preload() {//hleður inn myndirnar sem verða tilbúnar í notkun
-
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
@@ -46,7 +47,7 @@ function create() {//byggir leikinn með að setja inn allar myndir sem þú kal
 	player = game.add.sprite(32, game.world.height - 200, 'dude');//setur playerinn inn í leikinn og gefur honum sama physics og platforminn
 	game.physics.arcade.enable(player)
 
-	player.body.bounce.y = 0.2;//lætur kallinn skoppa smátt
+	player.body.bounce.y = 0.3;//lætur kallinn skoppa smátt
 	player.body.gravity.y = 300;//stillir þyngdaraflið fyrir kallinn
 	player.body.collideWorldBounds = true;
 
@@ -56,23 +57,28 @@ function create() {//byggir leikinn með að setja inn allar myndir sem þú kal
 
 	cursors = game.input.keyboard.createCursorKeys();//bætir við stýringum
 
+	// Stjörnur settar í hóp
 	stars = game.add.group(); 
 	stars.enableBody = true; 
 
-	for (var i=0; i<30; i++) {
-
+	// 8 stjörnur búnar til
+	for (var i=0; i<8; i++) {
 		var star = stars.create(Math.random()*790, -18, 'star');
-
 		star.body.gravity.y = 300;
 	}		
 
+	// Demantar settir í hóp
 	demantar = game.add.group(); 
 	demantar.enableBody = true; 	
 
+	// Baddar settir í hóp
 	baddis = game.add.group(); 
 	baddis.enableBody = true; 
 
-	scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'})
+	// Texti settur fyrir stig og sigur.
+	scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'});
+	stateText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '84px Arial', fill: '#fff' });
+    stateText.visible = false;
 }
 
 function update() {
@@ -80,11 +86,19 @@ function update() {
 	game.physics.arcade.collide(stars, platforms);
 	game.physics.arcade.collide(baddis, platforms);
 
-	if (score >= 200) {
+	// Ef stig fara í 1000+ þá vinnurðu leikinn og færð leik lokið skilaboð
+	if (score >= 1000) {
 		scoreText.text = 'SIGUR!';	
-        var gameoverLabel = game.add.text(300, 300, 'Þú frábær!!', {font: '84px comic-sans', fill: '#F2F2F2'});
-	}
+		stateText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '42px Arial', fill: '#fff' });
+		player.kill();
+		stateText.text = " Þú vannst! \n Smelltu til að endurræsa";
+        stateText.visible = true;
 
+        //the "click to restart" handler
+        game.input.onTap.addOnce(restart,this);
+    }
+
+    // Ef leikmaður snertir stjörnu, demant eða badda þá er viðeigandi fall keyrt
 	game.physics.arcade.overlap(player, stars, collectStar, null, this);
 	game.physics.arcade.overlap(player, demantar, collectDiamond, null, this);
 	game.physics.arcade.overlap(player, baddis, baddiKO, null, this);
@@ -114,9 +128,9 @@ function update() {
 	{
 		player.body.velocity.y = -350;
 	}
-
 }
 
+// Fall sem er keyrt ef leikmaður snertir stjörnu, gefur 10 stig
 function collectStar (player, star) {
 	star.kill();
 	count += 1;
@@ -126,32 +140,50 @@ function collectStar (player, star) {
 	scoreText.text = 'Score: ' + score;
 }
 
+// Fall sem er keyrt ef leikmaður snertir demant, gefur 100 stig
 function collectDiamond (player, demantur) {
 	demantur.kill();
 	spawnStars();
 
-	score += 50;
+	score += 100;
 	scoreText.text = 'Score: ' + score;
 }
 
+// Fall sem er keyrt ef leikmaður snertir badda, dregur frá 100 stig
 function baddiKO (player, baddi) {
 	baddi.kill();
 	spawnStars();
+
+	badCount -= 1;
 
 	score -= 100;
 	scoreText.text = 'Score: ' + score;
 }
 
+// Fall sem býr til demant og stjörnu í 10. hverju kalli, badda í 5. hverju og annars stjörnu
 function spawnStars () {
-
 	if (count%10==9){
 		var demantur = demantar.create(Math.random()*790, -18, 'demantur');
 		demantur.body.gravity.y = 100;
-	} else if (count%10==5) {
+		var star = stars.create(Math.random()*790, -18, 'star');
+		star.body.gravity.y = 300;
+	} else if (count%10==5 && badCount < 5) {
 		var baddi = baddis.create(Math.random()*790, -18, 'baddi');
 		baddi.body.gravity.y = 300;
+		badCount += 1
 	} else {
 		var star = stars.create(Math.random()*790, -18, 'star');
 		star.body.gravity.y = 300;
 	}
+}
+
+// Fall til að endurræsa talningu, stig og leikinn. 
+function restart() {
+	score = 0; 
+	count = 0;
+	badCount = 0;
+	scoreText.text = 'Score: ' + score;
+	player.revive();
+    stateText.visible = false;
+	create();
 }
