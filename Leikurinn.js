@@ -5,18 +5,24 @@ var platforms;
 var cursors;
 
 var stars;
+var diamonds;
+var baddi;
 var score = 0;
 var scoreText;
 
 var randomx;
 var randomy;
 
+var count = 0;
+
 function preload() {//hleður inn myndirnar sem verða tilbúnar í notkun
 
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
+    game.load.image('demantur', 'assets/diamond.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
+    game.load.spritesheet('baddi', 'assets/baddie.png', 32, 32);
 }
 
 
@@ -50,15 +56,21 @@ function create() {//byggir leikinn með að setja inn allar myndir sem þú kal
 
 	cursors = game.input.keyboard.createCursorKeys();//bætir við stýringum
 
-	stars = game.add.group();
+	stars = game.add.group(); 
 	stars.enableBody = true; 
 
-	for (var i=0; i<100; i++) {
+	for (var i=0; i<30; i++) {
 
 		var star = stars.create(Math.random()*790, -18, 'star');
 
 		star.body.gravity.y = 300;
-	}	
+	}		
+
+	demantar = game.add.group(); 
+	demantar.enableBody = true; 	
+
+	baddis = game.add.group(); 
+	baddis.enableBody = true; 
 
 	scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000'})
 }
@@ -66,8 +78,16 @@ function create() {//byggir leikinn með að setja inn allar myndir sem þú kal
 function update() {
 	var hitPlatform = game.physics.arcade.collide(player, platforms);//segir kóðanum að kallinn kemst ekki í gegn um platforms
 	game.physics.arcade.collide(stars, platforms);
+	game.physics.arcade.collide(baddis, platforms);
+
+	if (score >= 200) {
+		scoreText.text = 'SIGUR!';	
+        var gameoverLabel = game.add.text(300, 300, 'Þú frábær!!', {font: '84px comic-sans', fill: '#F2F2F2'});
+	}
 
 	game.physics.arcade.overlap(player, stars, collectStar, null, this);
+	game.physics.arcade.overlap(player, demantar, collectDiamond, null, this);
+	game.physics.arcade.overlap(player, baddis, baddiKO, null, this);
 
 	player.body.velocity.x = 0
 
@@ -99,14 +119,39 @@ function update() {
 
 function collectStar (player, star) {
 	star.kill();
+	count += 1;
 	spawnStars();
 
 	score += 10;
 	scoreText.text = 'Score: ' + score;
 }
 
-function spawnStars () {
-	var star = stars.create(Math.random()*790, -18, 'star');
+function collectDiamond (player, demantur) {
+	demantur.kill();
+	spawnStars();
 
-	star.body.gravity.y = 300;
+	score += 50;
+	scoreText.text = 'Score: ' + score;
+}
+
+function baddiKO (player, baddi) {
+	baddi.kill();
+	spawnStars();
+
+	score -= 100;
+	scoreText.text = 'Score: ' + score;
+}
+
+function spawnStars () {
+
+	if (count%10==9){
+		var demantur = demantar.create(Math.random()*790, -18, 'demantur');
+		demantur.body.gravity.y = 100;
+	} else if (count%10==5) {
+		var baddi = baddis.create(Math.random()*790, -18, 'baddi');
+		baddi.body.gravity.y = 300;
+	} else {
+		var star = stars.create(Math.random()*790, -18, 'star');
+		star.body.gravity.y = 300;
+	}
 }
